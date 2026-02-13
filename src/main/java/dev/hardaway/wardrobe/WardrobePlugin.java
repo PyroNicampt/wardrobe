@@ -66,6 +66,11 @@ public class WardrobePlugin extends JavaPlugin {
                 .register(Priority.DEFAULT, "Model", ModelAppearance.class, ModelAppearance.CODEC)
                 .register(Priority.NORMAL, "Variant", VariantAppearance.class, VariantAppearance.CODEC);
 
+        this.getCodecRegistry(Appearance.MODEL_ASSET_CODEC)
+                .register(Priority.DEFAULT, "Model", ModelAppearance.class, ModelAppearance.MODEL_ASSET_CODEC)
+                .register(Priority.NORMAL, "Variant", VariantAppearance.class, VariantAppearance.MODEL_ASSET_CODEC);
+
+
         AssetRegistry.register(HytaleAssetStore.builder(CosmeticCategoryAsset.class, new DefaultAssetMap<>())
                 .setPath("Wardrobe/Categories")
                 .setCodec(CosmeticCategoryAsset.CODEC)

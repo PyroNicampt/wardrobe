@@ -29,7 +29,7 @@ import java.util.*;
 public class PlayerModelCosmetic extends CosmeticAsset implements AppearanceCosmetic {
 
     public static final BuilderCodec<PlayerModelCosmetic> CODEC = BuilderCodec.builder(PlayerModelCosmetic.class, PlayerModelCosmetic::new, CosmeticAsset.ABSTRACT_CODEC)
-            .append(new KeyedCodec<>("Appearance", Appearance.CODEC, true),
+            .append(new KeyedCodec<>("Appearance", Appearance.MODEL_ASSET_CODEC, true),
                     (t, value) -> t.appearance = value,
                     t -> t.appearance
             )

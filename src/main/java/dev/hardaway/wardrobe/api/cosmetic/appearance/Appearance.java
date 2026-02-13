@@ -8,6 +8,8 @@ public interface Appearance {
 
     BuilderCodecMapCodec<Appearance> CODEC = new BuilderCodecMapCodec<>("Type", true);
 
+    BuilderCodecMapCodec<Appearance> MODEL_ASSET_CODEC = new BuilderCodecMapCodec<>("Type   ", true);
+
     String getModel(@Nullable String variantId);
 
     TextureConfig getTextureConfig(@Nullable String variantId);

@@ -8,6 +8,8 @@ import com.hypixel.hytale.codec.schema.metadata.ui.UIDefaultCollapsedState;
 import com.hypixel.hytale.codec.schema.metadata.ui.UIDisplayMode;
 import com.hypixel.hytale.codec.schema.metadata.ui.UIPropertyTitle;
 import com.hypixel.hytale.codec.validation.Validators;
+import com.hypixel.hytale.server.core.asset.common.CommonAssetValidator;
+import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
 import dev.hardaway.wardrobe.api.cosmetic.appearance.Appearance;
 import dev.hardaway.wardrobe.api.cosmetic.appearance.TextureConfig;
 import dev.hardaway.wardrobe.api.property.WardrobeProperties;
@@ -21,6 +23,14 @@ public class VariantAppearance implements Appearance {
 
     public static final BuilderCodec<VariantAppearance> CODEC = BuilderCodec.builder(VariantAppearance.class, VariantAppearance::new)
             .append(new KeyedCodec<>("Variants", new MapCodec<>(VariantAppearance.Entry.CODEC, LinkedHashMap::new), true),
+                    (a, value) -> a.variants = value, a -> a.variants
+            )
+            .metadata(new UIPropertyTitle("Variants")).documentation("The available variants of this appearance.")
+            .metadata(UIDefaultCollapsedState.UNCOLLAPSED)
+            .add().build();
+
+    public static final BuilderCodec<VariantAppearance> MODEL_ASSET_CODEC = BuilderCodec.builder(VariantAppearance.class, VariantAppearance::new)
+            .append(new KeyedCodec<>("Variants", new MapCodec<>(VariantAppearance.Entry.MODEL_ASSET_CODEC, LinkedHashMap::new), true),
                     (a, value) -> a.variants = value, a -> a.variants
             )
             .metadata(new UIPropertyTitle("Variants")).documentation("The available variants of this appearance.")
@@ -58,7 +68,7 @@ public class VariantAppearance implements Appearance {
 
     public static class Entry {
 
-        public static final BuilderCodec<VariantAppearance.Entry> CODEC = BuilderCodec.builder(VariantAppearance.Entry.class, VariantAppearance.Entry::new)
+        public static final BuilderCodec<VariantAppearance.Entry> BASE_CODEC = BuilderCodec.builder(VariantAppearance.Entry.class, VariantAppearance.Entry::new)
                 .append(new KeyedCodec<>("Properties", WardrobeProperties.CODEC, true),
                         (t, value) -> t.properties = value,
                         t -> t.properties
@@ -75,10 +85,38 @@ public class VariantAppearance implements Appearance {
                 .metadata(new UIPropertyTitle("Icon")).documentation("A preview icon of the Cosmetic with this Variant applied to display in the Wardrobe Menu.")
                 .add()
 
+                .append(new KeyedCodec<>("TextureConfig", TextureConfig.CODEC, true),
+                        (t, value) -> t.textureConfig = value, t -> t.textureConfig
+                )
+                .addValidator(Validators.nonNull())
+                .metadata(new UIPropertyTitle("Texture Config")).documentation("The Texture Configuration for this appearance.")
+                .metadata(UIDefaultCollapsedState.UNCOLLAPSED)
+                .add()
+                .afterDecode(asset -> {
+                    if (asset.getIcon() == null && asset.properties != null && asset.properties.getIcon() != null) { // DEPRECATED
+                        asset.icon = asset.properties.getIcon();
+                    }
+                })
+                .build();
+
+        public static final BuilderCodec<VariantAppearance.Entry> CODEC = BuilderCodec.builder(VariantAppearance.Entry.class, VariantAppearance.Entry::new, Entry.BASE_CODEC)
+
                 .append(new KeyedCodec<>("Model", Codec.STRING, true),
                         (t, value) -> t.model = value, t -> t.model
                 )
                 .addValidator(Validators.nonNull())
+                .addValidator(CommonAssetValidator.MODEL_CHARACTER_ATTACHMENT)
+                .metadata(new UIPropertyTitle("Model")).documentation("The model to display for this appearance.")
+                .add()
+                .build();
+
+        public static final BuilderCodec<VariantAppearance.Entry> MODEL_ASSET_CODEC = BuilderCodec.builder(VariantAppearance.Entry.class, VariantAppearance.Entry::new, Entry.BASE_CODEC)
+
+                .append(new KeyedCodec<>("Model", Codec.STRING, true),
+                        (t, value) -> t.model = value, t -> t.model
+                )
+                .addValidator(Validators.nonNull())
+                .addValidator(ModelAsset.VALIDATOR_CACHE.getValidator())
                 .metadata(new UIPropertyTitle("Model")).documentation("The model to display for this appearance.")
                 .add()
 
@@ -87,19 +125,6 @@ public class VariantAppearance implements Appearance {
                         (a) -> (double) a.scale
                 )
                 .add()
-
-                .append(new KeyedCodec<>("TextureConfig", TextureConfig.CODEC, true),
-                        (t, value) -> t.textureConfig = value, t -> t.textureConfig
-                )
-                .addValidator(Validators.nonNull())
-                .metadata(new UIPropertyTitle("Appearance")).documentation("The Texture Configuration for this appearance.")
-                .metadata(UIDefaultCollapsedState.UNCOLLAPSED)
-                .add()
-                .afterDecode(asset -> {
-                    if (asset.getIcon() == null && asset.properties != null && asset.properties.getIcon() != null) { // DEPRECATED
-                        asset.icon = asset.properties.getIcon();
-                    }
-                })
                 .build();
 
         private WardrobeProperties properties;

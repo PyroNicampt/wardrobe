@@ -6,6 +6,9 @@ import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.schema.metadata.ui.UIDefaultCollapsedState;
 import com.hypixel.hytale.codec.schema.metadata.ui.UIPropertyTitle;
 import com.hypixel.hytale.codec.validation.Validators;
+import com.hypixel.hytale.server.core.asset.common.CommonAssetValidator;
+import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
+import com.hypixel.hytale.server.core.asset.type.model.config.ModelAttachment;
 import dev.hardaway.wardrobe.api.cosmetic.appearance.Appearance;
 import dev.hardaway.wardrobe.api.cosmetic.appearance.TextureConfig;
 import dev.hardaway.wardrobe.api.property.validator.WardrobeValidators;
@@ -14,35 +17,49 @@ import javax.annotation.Nullable;
 
 public class ModelAppearance implements Appearance {
 
-    public static final BuilderCodec<ModelAppearance> CODEC = BuilderCodec.builder(ModelAppearance.class, ModelAppearance::new)
-            .append(new KeyedCodec<>("Model", Codec.STRING, true),
-                    (a, value) -> a.model = value,
-                    a -> a.model
-            )
-            .addValidator(Validators.nonNull())
-            .metadata(new UIPropertyTitle("Model")).documentation("The model to display for this appearance.")
-            .add()
-
-            .append(new KeyedCodec<>("Scale", Codec.DOUBLE),
-                    (a, d) -> a.scale = d.floatValue(),
-                    (a) -> (double) a.scale
-            )
-            .metadata(new UIPropertyTitle("Player Model Scale")).documentation("The scale to use for the Player Model. Only applies to PlayerModel Cosmetics.")
-            .add()
-
-            .append(new KeyedCodec<>("TextureConfig", TextureConfig.CODEC),
+    public static final BuilderCodec<ModelAppearance> BASE_CODEC = BuilderCodec.builder(ModelAppearance.class, ModelAppearance::new)
+            .append(new KeyedCodec<>("TextureConfig", TextureConfig.CODEC, true),
                     (a, value) -> a.textureConfig = value,
                     a -> a.textureConfig
             )
             .addValidator(Validators.nonNull())
-            .metadata(new UIPropertyTitle("Appearance")).documentation("The Texture Configuration for this appearance.")
+            .metadata(new UIPropertyTitle("Texture Config")).documentation("The Texture Configuration for this appearance.")
             .metadata(UIDefaultCollapsedState.UNCOLLAPSED)
             .add()
 
             .build();
 
+    public static final BuilderCodec<ModelAppearance> CODEC = BuilderCodec.builder(ModelAppearance.class, ModelAppearance::new, ModelAppearance.BASE_CODEC)
+            .append(new KeyedCodec<>("Model", Codec.STRING, true),
+                    (a, value) -> a.model = value,
+                    a -> a.model
+            )
+            .addValidator(Validators.nonNull())
+            .addValidator(CommonAssetValidator.MODEL_CHARACTER_ATTACHMENT)
+            .metadata(new UIPropertyTitle("Model")).documentation("The model to display for this appearance.")
+            .add()
+            .build();
+
+    public static final BuilderCodec<ModelAppearance> MODEL_ASSET_CODEC = BuilderCodec.builder(ModelAppearance.class, ModelAppearance::new, ModelAppearance.BASE_CODEC)
+            .append(new KeyedCodec<>("Model", Codec.STRING, true),
+                    (a, value) -> a.model = value,
+                    a -> a.model
+            )
+            .addValidator(Validators.nonNull())
+            .addValidator(ModelAsset.VALIDATOR_CACHE.getValidator().late())
+            .metadata(new UIPropertyTitle("Model")).documentation("The model to display for this appearance.")
+            .add()
+
+            .append(new KeyedCodec<>("Scale", Codec.FLOAT),
+                    (a, f) -> a.scale = f,
+                    (a) -> a.scale
+            )
+            .metadata(new UIPropertyTitle("Player Model Scale")).documentation("The scale to use for the Player Model.")
+            .add()
+            .build();
+
     private String model;
-    private float scale = 1;
+    private float scale = 1.0F;
     private TextureConfig textureConfig;
 
     @Override
