@@ -14,10 +14,11 @@ import com.hypixel.hytale.server.core.cosmetics.CosmeticType;
 import com.hypixel.hytale.server.core.cosmetics.CosmeticsModule;
 import com.hypixel.hytale.server.core.cosmetics.PlayerSkin;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.inventory.InventoryChangeEvent;
+import com.hypixel.hytale.server.core.event.events.ecs.InventoryChangeEvent;
 import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
+import com.hypixel.hytale.server.core.modules.entity.component.DisplayNameComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
 import com.hypixel.hytale.server.core.modules.entity.player.PlayerSettings;
 import com.hypixel.hytale.server.core.modules.entity.player.PlayerSkinComponent;
@@ -71,7 +72,9 @@ public class PlayerWardrobeSystems {
                     chunk.getComponent(i, PlayerSettings.getComponentType()),
                     playerSkinComponent.getPlayerSkin(),
                     wardrobe,
-                    chunk.getComponent(i, PlayerRef.getComponentType())
+                    chunk.getComponent(i, PlayerRef.getComponentType()),
+                    chunk.getComponent(i, InventoryComponent.Armor.getComponentType()),
+                    chunk.getComponent(i, DisplayNameComponent.getComponentType())
             );
             chunk.setComponent(i, ModelComponent.getComponentType(), new ModelComponent(model));
         }
@@ -79,10 +82,10 @@ public class PlayerWardrobeSystems {
         @Nullable
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.and(PlayerWardrobeComponent.getComponentType(), PlayerSettings.getComponentType(), PlayerSkinComponent.getComponentType());
+            return Query.and(PlayerWardrobeComponent.getComponentType(), PlayerSettings.getComponentType(), PlayerSkinComponent.getComponentType(), PlayerRef.getComponentType(), InventoryComponent.Armor.getComponentType());
         }
 
-        public static Model buildWardrobeModel(Player player, PlayerSettings playerSettings, com.hypixel.hytale.protocol.PlayerSkin skin, PlayerWardrobe wardrobeComponent, PlayerRef playerRef) {
+        public static Model buildWardrobeModel(Player player, PlayerSettings playerSettings, com.hypixel.hytale.protocol.PlayerSkin skin, PlayerWardrobe wardrobeComponent, PlayerRef playerRef, InventoryComponent.Armor invArmor, DisplayNameComponent displayName) {
             // Build context
             Model playerModel = CosmeticsModule.get().createModel(skin);
             PlayerWardrobeContext context = new PlayerWardrobeContext(
@@ -132,7 +135,7 @@ public class PlayerWardrobeSystems {
 
             // Handle armor hiding
             Set<CosmeticType> hiddenHytaleSlots = new HashSet<>();
-            ItemContainer armorContainer = player.getInventory().getArmor();
+            ItemContainer armorContainer = invArmor.getInventory();
             for (short armorIndex = 0; armorIndex < armorContainer.getCapacity(); armorIndex++) {
                 ItemStack stack = armorContainer.getItemStack(armorIndex);
                 if (stack == null || stack.isEmpty()) continue;
@@ -183,7 +186,7 @@ public class PlayerWardrobeSystems {
 
             Model contextModel = context.getPlayerModel();
             return new Model(
-                    "Wardrobe_" + player.getDisplayName() + "_" + contextModel.getModelAssetId(),
+                    "Wardrobe_" + displayName.getDisplayName() + "_" + contextModel.getModelAssetId(),
                     contextModel.getScale(),
                     contextModel.getRandomAttachmentIds(),
                     modelAttachments.toArray(ModelAttachment[]::new), // Skin attachments

@@ -16,7 +16,7 @@
       "Url": "https://www.curseforge.com/members/tazer/projects"
     }
   ],
-  "ServerVersion": "${hytale_version}",
+  "ServerVersion": ">=${hytale_version} <0.6.0",
   "Dependencies": {
     "Hytale:AssetModule": "*",
     "Hytale:EntityModule": "*",
